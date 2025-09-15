@@ -1,0 +1,62 @@
+{
+  "name": "@blueprintlabio/time-ai",
+  "version": "0.1.0",
+  "description": "Time-aware utilities for LLM applications - parse dates, add temporal context, and optimize prompts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:monitor": "node scripts/test-monitor.js once",
+    "test:monitor:continuous": "node scripts/test-monitor.js continuous",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "time",
+    "date",
+    "parsing",
+    "temporal",
+    "chrono",
+    "natural-language",
+    "prompt",
+    "context"
+  ],
+  "author": "Blueprint Lab",
+  "license": "MIT",
+  "dependencies": {
+    "chrono-node": "^2.8.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlueprintLabIO/time-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BlueprintLabIO/time-ai/issues"
+  },
+  "homepage": "https://github.com/BlueprintLabIO/time-ai#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

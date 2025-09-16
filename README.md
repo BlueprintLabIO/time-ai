@@ -3,6 +3,12 @@
 > Time-aware utilities for LLM applications - parse dates, add temporal context, and optimize prompts
 
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/BlueprintLabIO/time-ai/main/badges/coverage.json)
+
+## Links
+
+- Project site: https://time-ai.blueprintlab.io
+- NPM package: https://www.npmjs.com/package/@blueprintlabio/time-ai
 
 ## Features
 
@@ -248,6 +254,17 @@ console.log(`Added ${result.tokensAdded} tokens`);
 // Use compact context for token-sensitive applications
 const timeAI = new TimeAI({ includeContext: false });
 ```
+
+## Test Coverage
+
+<!-- COVERAGE-START -->
+Coverage from latest test run:
+
+- Statements: 92.45%
+- Branches: 85.26%
+- Functions: 88.88%
+- Lines: 93.18%
+<!-- COVERAGE-END -->
 
 ## Contributing
 

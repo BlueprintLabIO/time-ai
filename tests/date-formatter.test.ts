@@ -245,7 +245,8 @@ describe('DateFormatter', () => {
       const result = formatter.formatForLLMContext(customDate);
 
       expect(result).toContain('2024-01-01');
-      expect(result).toContain('Sunday'); // January 1, 2024 was a Sunday
+      // In America/New_York timezone, 2024-01-01T00:00:00Z is still Sunday locally
+      expect(result).toContain('Sunday');
     });
   });
 

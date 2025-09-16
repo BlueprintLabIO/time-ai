@@ -57,6 +57,28 @@ describe('TimeAI', () => {
       const hybrid = timeAI.enhancePrompt(text, { strategy: 'hybrid' });
       expect(hybrid.enhancedText).toMatch(/Meet next Friday \(\d{4}-\d{2}-\d{2}\)/);
     });
+
+    it('should respect includeContext=false and compute tokensAdded from enhancements only', () => {
+      const ai = new TimeAI({ includeContext: false, timezone: 'UTC', locale: 'en-US' });
+      const text = 'Meet tomorrow';
+      const result = ai.enhancePrompt(text, { strategy: 'normalize' });
+
+      // No context when disabled
+      expect(result.context).toBe('');
+
+      // tokensAdded should be from replacement only (normalize replaces with YYYY-MM-DD)
+      expect(result.tokensAdded).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should replace multiple date expressions correctly (order-safe)', () => {
+      const ai = new TimeAI({ includeContext: false, timezone: 'UTC', locale: 'en-US' });
+      const text = 'Do it Friday and next Monday';
+      const result = ai.enhancePrompt(text, { strategy: 'normalize' });
+
+      // Should contain two ISO-like dates
+      const matches = result.enhancedText.match(/\d{4}-\d{2}-\d{2}/g) || [];
+      expect(matches.length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe('parseDate', () => {

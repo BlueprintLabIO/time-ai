@@ -10,6 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "coverage:update-readme": "node scripts/update-coverage-readme.js",
     "test:monitor": "node scripts/test-monitor.js once",
     "test:monitor:continuous": "node scripts/test-monitor.js continuous",
     "lint": "eslint src/**/*.ts",

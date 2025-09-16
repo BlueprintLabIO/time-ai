@@ -258,11 +258,9 @@ describe('DateFormatter', () => {
       expect(result).toContain('2025-09-15');
     });
 
-    it('should not duplicate if formatted matches original', () => {
-      jest.spyOn(formatter, 'formatRelative').mockReturnValue('next friday');
-
+    it('should always append absolute date in hybrid strategy', () => {
       const result = formatter.formatDateWithOriginal(testDate, 'next friday');
-      expect(result).toBe('next friday');
+      expect(result).toBe('next friday (2025-09-15)');
     });
   });
 

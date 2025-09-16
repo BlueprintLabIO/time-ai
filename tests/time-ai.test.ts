@@ -47,15 +47,26 @@ describe('TimeAI', () => {
 
     it('should apply different strategies', () => {
       const text = 'Meet next Friday';
-      
+
       const preserved = timeAI.enhancePrompt(text, { strategy: 'preserve' });
       expect(preserved.enhancedText).toBe('Meet next Friday');
-      
+
       const normalized = timeAI.enhancePrompt(text, { strategy: 'normalize' });
       expect(normalized.enhancedText).toMatch(/Meet \d{4}-\d{2}-\d{2}/);
-      
+
       const hybrid = timeAI.enhancePrompt(text, { strategy: 'hybrid' });
       expect(hybrid.enhancedText).toMatch(/Meet next Friday \(\d{4}-\d{2}-\d{2}\)/);
+    });
+
+    it('should always add absolute dates in hybrid strategy even for well-formed relative dates', () => {
+      const tomorrow = timeAI.enhancePrompt('Call client tomorrow', { strategy: 'hybrid' });
+      expect(tomorrow.enhancedText).toMatch(/Call client tomorrow \(\d{4}-\d{2}-\d{2}\)/);
+
+      const nextTuesday = timeAI.enhancePrompt('Schedule meeting next Tuesday', { strategy: 'hybrid' });
+      expect(nextTuesday.enhancedText).toMatch(/Schedule meeting next Tuesday \(\d{4}-\d{2}-\d{2}\)/);
+
+      const today = timeAI.enhancePrompt('Submit report today', { strategy: 'hybrid' });
+      expect(today.enhancedText).toMatch(/Submit report today \(\d{4}-\d{2}-\d{2}\)/);
     });
 
     it('should respect includeContext=false and compute tokensAdded from enhancements only', () => {
@@ -78,6 +89,27 @@ describe('TimeAI', () => {
       // Should contain two ISO-like dates
       const matches = result.enhancedText.match(/\d{4}-\d{2}-\d{2}/g) || [];
       expect(matches.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should enhance longer prompts with multiple dates using hybrid strategy', () => {
+      const longPrompt = 'Please prepare the quarterly report for review by tomorrow, schedule a client meeting next Friday for the product demo, and send reminder emails this Tuesday about the upcoming conference next month. Also, don\'t forget to book the conference room for Monday morning and submit the budget proposal by end of this week.';
+
+      const result = timeAI.enhancePrompt(longPrompt, { strategy: 'hybrid' });
+
+      // Should find multiple date extractions
+      expect(result.extractions.length).toBeGreaterThanOrEqual(4);
+
+      // Enhanced text should contain absolute dates in parentheses
+      expect(result.enhancedText).toMatch(/tomorrow \(\d{4}-\d{2}-\d{2}\)/);
+      expect(result.enhancedText).toMatch(/next Friday \(\d{4}-\d{2}-\d{2}\)/);
+      expect(result.enhancedText).toMatch(/this Tuesday \(\d{4}-\d{2}-\d{2}\)/);
+      expect(result.enhancedText).toMatch(/Monday.*\(\d{4}-\d{2}-\d{2}\)/);
+
+      // Original structure should be preserved with dates enhanced
+      expect(result.enhancedText).toContain('quarterly report');
+      expect(result.enhancedText).toContain('client meeting');
+      expect(result.enhancedText).toContain('reminder emails');
+      expect(result.enhancedText).toContain('conference room');
     });
   });
 

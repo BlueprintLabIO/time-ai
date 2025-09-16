@@ -169,12 +169,6 @@ export class DateFormatter {
   }
 
   formatDateWithOriginal(date: Date, originalText: string): string {
-    const formatted = this.formatRelative(date);
-    
-    if (formatted.toLowerCase() === originalText.toLowerCase()) {
-      return formatted;
-    }
-    
     const compact = this.formatCompact(date);
     return `${originalText} (${compact})`;
   }

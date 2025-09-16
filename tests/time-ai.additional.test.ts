@@ -20,5 +20,23 @@ describe('TimeAI (additional)', () => {
     expect(Number.isFinite(res.tokensAdded)).toBe(true);
     expect(res.tokensAdded).toBeGreaterThanOrEqual(0);
   });
+
+  it('hybrid strategy should always add absolute dates even when relative format matches original', () => {
+    const ai = new TimeAI({ includeContext: false, timezone: 'UTC', locale: 'en-US' });
+
+    // Test cases where the relative format would match the original text
+    const testCases = [
+      'Call tomorrow',
+      'Meet today',
+      'Schedule next Monday',
+      'Deadline this Friday'
+    ];
+
+    testCases.forEach(text => {
+      const res = ai.enhancePrompt(text, { strategy: 'hybrid' });
+      expect(res.enhancedText).not.toBe(text); // Should be enhanced
+      expect(res.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}\)/); // Should contain absolute date
+    });
+  });
 });
 

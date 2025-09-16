@@ -260,10 +260,10 @@ const timeAI = new TimeAI({ includeContext: false });
 <!-- COVERAGE-START -->
 Coverage from latest test run:
 
-- Statements: 92.45%
-- Branches: 85.26%
+- Statements: 91.83%
+- Branches: 82.53%
 - Functions: 88.88%
-- Lines: 93.18%
+- Lines: 92.50%
 <!-- COVERAGE-END -->
 
 ## Contributing

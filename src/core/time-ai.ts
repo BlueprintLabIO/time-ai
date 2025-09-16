@@ -158,13 +158,25 @@ export class TimeAI {
           break;
         
         case 'normalize':
-          // Replace with absolute date
-          replacement = this.formatter.format(resolvedDate, 'compact');
+          // Replace with absolute date (with time if original had time reference)
+          if (extraction.grain && extraction.grain !== 'day') {
+            // Force include time and timezone for time-grain expressions
+            const dateStr = resolvedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            const timeStr = this.formatter['contextManager'].formatDateInTimezone(resolvedDate, {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
+            const context = this.formatter['contextManager'].getContext();
+            replacement = `${dateStr} ${timeStr} ${context.timezone}`;
+          } else {
+            replacement = this.formatter.formatCompact(resolvedDate);
+          }
           break;
-        
+
         case 'hybrid':
-          // Combine relative and absolute
-          replacement = this.formatter.formatDateWithOriginal(resolvedDate, originalText);
+          // Combine relative and absolute (with time if original had time reference)
+          replacement = this.formatter.formatDateWithOriginal(resolvedDate, originalText, extraction.grain);
           break;
         
         default:

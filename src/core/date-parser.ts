@@ -1,5 +1,12 @@
 import * as chrono from 'chrono-node';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { DateExtraction, ParsingOptions, TimeContext } from '../types';
+
+// Initialize dayjs plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export class DateParser {
   private chronoInstance: chrono.Chrono;
@@ -12,11 +19,11 @@ export class DateParser {
 
   parse(text: string, options: ParsingOptions = {}): DateExtraction[] {
     const referenceDate = options.referenceDate || new Date();
-    
+
     // Parse with chrono
     const results = this.chronoInstance.parse(text, referenceDate);
-    
-    return results.map(result => this.convertChronoResult(result, text));
+
+    return results.map(result => this.convertChronoResult(result, text, options));
   }
 
   parseFirst(text: string, options: ParsingOptions = {}): DateExtraction | null {
@@ -28,11 +35,13 @@ export class DateParser {
     return this.parse(text, options);
   }
 
-  private convertChronoResult(result: chrono.ParsedResult, originalText: string): DateExtraction {
-    const startDate = result.start.date();
+  private convertChronoResult(result: chrono.ParsedResult, originalText: string, options: ParsingOptions = {}): DateExtraction {
     const confidence = this.calculateConfidence(result);
     const type = this.determineType(result);
     const grain = this.determineGrain(result);
+
+    // Use timezone-aware date construction if timezone is provided
+    const startDate = this.constructTimezoneAwareDate(result, options.timezone || 'UTC', options.referenceDate);
 
     return {
       originalText: result.text,
@@ -43,6 +52,60 @@ export class DateParser {
       end: result.index + result.text.length,
       grain
     };
+  }
+
+  private constructTimezoneAwareDate(result: chrono.ParsedResult, targetTimezone: string, referenceDate?: Date): Date {
+    const components = result.start;
+    const originalText = result.text.toLowerCase();
+
+    // Start with the reference date in the target timezone
+    const referenceDayjs = referenceDate
+      ? dayjs(referenceDate).tz(targetTimezone)
+      : dayjs().tz(targetTimezone);
+
+    let baseDayjs: dayjs.Dayjs;
+
+    // Handle relative dates specially
+    if (originalText.includes('tomorrow')) {
+      baseDayjs = referenceDayjs.add(1, 'day');
+    } else if (originalText.includes('yesterday')) {
+      baseDayjs = referenceDayjs.subtract(1, 'day');
+    } else if (originalText.includes('today')) {
+      baseDayjs = referenceDayjs;
+    } else {
+      // For absolute dates, start from a clean date in the target timezone
+      baseDayjs = dayjs().tz(targetTimezone).startOf('day');
+
+      // Apply chrono's date components
+      if (components.get('year')) baseDayjs = baseDayjs.year(components.get('year')!);
+      if (components.get('month')) baseDayjs = baseDayjs.month(components.get('month')! - 1); // dayjs uses 0-indexed months
+      if (components.get('day')) baseDayjs = baseDayjs.date(components.get('day')!);
+    }
+
+    // Apply time components if they were explicitly specified (certain)
+    if (components.isCertain('hour')) {
+      baseDayjs = baseDayjs.hour(components.get('hour')!);
+    }
+    if (components.isCertain('minute')) {
+      baseDayjs = baseDayjs.minute(components.get('minute')!);
+    }
+    if (components.isCertain('second')) {
+      baseDayjs = baseDayjs.second(components.get('second')!);
+    }
+
+    // If no time was specified, don't change the time (keep it as is)
+    if (!components.isCertain('hour') && !components.isCertain('minute') && !components.isCertain('second')) {
+      // For day-only expressions, we might want to set a default time or keep current time
+      // For now, let's keep the current time for today/tomorrow/yesterday, but set to start of day for others
+      if (originalText.includes('today') || originalText.includes('tomorrow') || originalText.includes('yesterday')) {
+        // Keep the current time
+      } else {
+        // Set to start of day for other day-only expressions
+        baseDayjs = baseDayjs.startOf('day');
+      }
+    }
+
+    return baseDayjs.toDate();
   }
 
   private calculateConfidence(result: chrono.ParsedResult): number {
@@ -119,25 +182,15 @@ export class DateParser {
   }
 
   private determineGrain(result: chrono.ParsedResult): 'day' | 'hour' | 'minute' | 'second' {
-    const text = result.text.toLowerCase();
+    // Use chrono's isCertain() method to determine what was explicitly specified vs implied
+    // This is the correct way to distinguish user intent
 
-    // Check for explicit time indicators in the text first (more reliable)
-    if (text.includes('second') || /:\d{2}:\d{2}/.test(text)) return 'second';
-    if (text.includes('minute') || (text.includes(':') && /\d{1,2}:\d{2}/.test(text))) return 'minute';
-    if (text.includes('am') || text.includes('pm') || text.includes('hour') ||
-        /\d{1,2}\s*(am|pm)/.test(text) || /\d{1,2}:\d{2}/.test(text)) return 'hour';
+    // Check for explicit (certain) time components in order of precision
+    if (result.start.isCertain('second')) return 'second';
+    if (result.start.isCertain('minute')) return 'minute';
+    if (result.start.isCertain('hour')) return 'hour';
 
-    // For simple time-less expressions, return day
-    const dayOnlyExpressions = ['today', 'tomorrow', 'yesterday', 'next week', 'last week', 'next month'];
-    if (dayOnlyExpressions.some(expr => text.includes(expr))) {
-      return 'day';
-    }
-
-    // Check what chrono actually parsed as a fallback
-    if (result.start.get('second') !== null && result.start.get('second') !== undefined) return 'second';
-    if (result.start.get('minute') !== null && result.start.get('minute') !== undefined) return 'minute';
-    if (result.start.get('hour') !== null && result.start.get('hour') !== undefined) return 'hour';
-
+    // If no time components were explicitly specified, it's a day-level expression
     return 'day';
   }
 

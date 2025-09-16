@@ -258,9 +258,14 @@ describe('DateFormatter', () => {
       expect(result).toContain('2025-09-15');
     });
 
-    it('should always append absolute date in hybrid strategy', () => {
-      const result = formatter.formatDateWithOriginal(testDate, 'next friday');
+    it('should append absolute date without time for day-grain expressions', () => {
+      const result = formatter.formatDateWithOriginal(testDate, 'next friday', 'day');
       expect(result).toBe('next friday (2025-09-15)');
+    });
+
+    it('should append absolute date with time for hour-grain expressions', () => {
+      const result = formatter.formatDateWithOriginal(testDate, 'next friday at 3pm', 'hour');
+      expect(result).toBe('next friday at 3pm (2025-09-15 11:30 AM America/New_York)');
     });
   });
 

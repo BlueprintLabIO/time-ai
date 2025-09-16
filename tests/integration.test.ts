@@ -29,7 +29,7 @@ describe('Integration Tests', () => {
       const result = timeAI.enhancePrompt(prompt, { strategy: 'hybrid' });
 
       expect(result.extractions).toHaveLength(2);
-      expect(result.enhancedText).toMatch(/next Friday \(\d{4}-\d{2}-\d{2}\)/);
+      expect(result.enhancedText).toMatch(/next Friday \(\d{4}-\d{2}-\d{2}.*\)/);
       expect(result.enhancedText).toContain('next week');
     });
 
@@ -119,7 +119,7 @@ describe('Integration Tests', () => {
 
       // Hybrid should combine both
       expect(hybrid.enhancedText).toContain('next Friday');
-      expect(hybrid.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}\)/);
+      expect(hybrid.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}.*\)/);
     });
   });
 

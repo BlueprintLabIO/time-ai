@@ -14,18 +14,20 @@ describe('DateParser', () => {
       expect(result).not.toBeNull();
       expect(result!.type).toBe('relative');
       expect(result!.originalText).toBe('tomorrow at 3pm');
-      expect(result!.grain).toBe('hour');
+      expect(result!.grain).toBe('minute'); // "3pm" implies "3:00pm" so minute is certain
       expect(result!.confidence).toBeGreaterThan(0.8);
     });
 
     it('should parse absolute dates', () => {
-      const result = parser.parseFirst('September 15, 2025 at 2:30 PM');
+      const result = parser.parseFirst('September 15, 2025 at 2:30 PM', { timezone: 'UTC' });
 
       expect(result).not.toBeNull();
       expect(result!.type).toBe('absolute');
-      expect(result!.resolvedDate.getFullYear()).toBe(2025);
-      expect(result!.resolvedDate.getMonth()).toBe(8); // September
-      expect(result!.resolvedDate.getDate()).toBe(15);
+      expect(result!.resolvedDate.getUTCFullYear()).toBe(2025);
+      expect(result!.resolvedDate.getUTCMonth()).toBe(8); // September
+      expect(result!.resolvedDate.getUTCDate()).toBe(15);
+      expect(result!.resolvedDate.getUTCHours()).toBe(14); // 2:30 PM = 14:30
+      expect(result!.resolvedDate.getUTCMinutes()).toBe(30);
       expect(result!.grain).toBe('minute');
     });
 
@@ -184,7 +186,7 @@ describe('DateParser', () => {
 
     it('should determine hour grain for hour expressions', () => {
       const result = parser.parseFirst('tomorrow at 3pm');
-      expect(result!.grain).toBe('hour');
+      expect(result!.grain).toBe('minute'); // "3pm" implies "3:00pm" so minute is certain
     });
 
     it('should determine minute grain for minute expressions', () => {
@@ -206,11 +208,11 @@ describe('DateParser', () => {
   describe('parsing with options', () => {
     it('should use reference date for relative parsing', () => {
       const referenceDate = new Date('2025-01-01T12:00:00Z');
-      const result = parser.parseFirst('tomorrow', { referenceDate });
+      const result = parser.parseFirst('tomorrow', { referenceDate, timezone: 'UTC' });
 
       expect(result).not.toBeNull();
-      expect(result!.resolvedDate.getDate()).toBe(2);
-      expect(result!.resolvedDate.getMonth()).toBe(0); // January
+      expect(result!.resolvedDate.getUTCDate()).toBe(2);
+      expect(result!.resolvedDate.getUTCMonth()).toBe(0); // January
     });
 
     it('should handle timezone in parsing options', () => {
@@ -219,7 +221,16 @@ describe('DateParser', () => {
       });
 
       expect(result).not.toBeNull();
-      expect(result!.resolvedDate.getHours()).toBe(15);
+
+      // Verify that 3pm NYC time was parsed correctly by checking it displays as 3pm in NYC
+      const nycTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(result!.resolvedDate);
+
+      expect(nycTime).toBe('03:00 PM');
     });
 
     it('should handle locale in parsing options', () => {

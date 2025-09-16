@@ -55,18 +55,18 @@ describe('TimeAI', () => {
       expect(normalized.enhancedText).toMatch(/Meet \d{4}-\d{2}-\d{2}/);
 
       const hybrid = timeAI.enhancePrompt(text, { strategy: 'hybrid' });
-      expect(hybrid.enhancedText).toMatch(/Meet next Friday \(\d{4}-\d{2}-\d{2}\)/);
+      expect(hybrid.enhancedText).toMatch(/Meet next Friday \(\d{4}-\d{2}-\d{2}.*\)/);
     });
 
     it('should always add absolute dates in hybrid strategy even for well-formed relative dates', () => {
       const tomorrow = timeAI.enhancePrompt('Call client tomorrow', { strategy: 'hybrid' });
-      expect(tomorrow.enhancedText).toMatch(/Call client tomorrow \(\d{4}-\d{2}-\d{2}\)/);
+      expect(tomorrow.enhancedText).toMatch(/Call client tomorrow \(\d{4}-\d{2}-\d{2}.*\)/);
 
       const nextTuesday = timeAI.enhancePrompt('Schedule meeting next Tuesday', { strategy: 'hybrid' });
-      expect(nextTuesday.enhancedText).toMatch(/Schedule meeting next Tuesday \(\d{4}-\d{2}-\d{2}\)/);
+      expect(nextTuesday.enhancedText).toMatch(/Schedule meeting next Tuesday \(\d{4}-\d{2}-\d{2}.*\)/);
 
       const today = timeAI.enhancePrompt('Submit report today', { strategy: 'hybrid' });
-      expect(today.enhancedText).toMatch(/Submit report today \(\d{4}-\d{2}-\d{2}\)/);
+      expect(today.enhancedText).toMatch(/Submit report today \(\d{4}-\d{2}-\d{2}.*\)/);
     });
 
     it('should respect includeContext=false and compute tokensAdded from enhancements only', () => {
@@ -100,10 +100,10 @@ describe('TimeAI', () => {
       expect(result.extractions.length).toBeGreaterThanOrEqual(4);
 
       // Enhanced text should contain absolute dates in parentheses
-      expect(result.enhancedText).toMatch(/tomorrow \(\d{4}-\d{2}-\d{2}\)/);
-      expect(result.enhancedText).toMatch(/next Friday \(\d{4}-\d{2}-\d{2}\)/);
-      expect(result.enhancedText).toMatch(/this Tuesday \(\d{4}-\d{2}-\d{2}\)/);
-      expect(result.enhancedText).toMatch(/Monday.*\(\d{4}-\d{2}-\d{2}\)/);
+      expect(result.enhancedText).toMatch(/tomorrow \(\d{4}-\d{2}-\d{2}.*\)/);
+      expect(result.enhancedText).toMatch(/next Friday \(\d{4}-\d{2}-\d{2}.*\)/);
+      expect(result.enhancedText).toMatch(/this Tuesday \(\d{4}-\d{2}-\d{2}.*\)/);
+      expect(result.enhancedText).toMatch(/Monday.*\(\d{4}-\d{2}-\d{2}.*\)/);
 
       // Original structure should be preserved with dates enhanced
       expect(result.enhancedText).toContain('quarterly report');

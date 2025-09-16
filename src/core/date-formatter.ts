@@ -79,6 +79,29 @@ export class DateFormatter {
     return date.toISOString().split('T')[0]; // YYYY-MM-DD
   }
 
+  formatCompactWithTime(date: Date): string {
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Check if time is significant (not midnight UTC)
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+
+    if (hours === 0 && minutes === 0) {
+      // If it's exactly midnight UTC, just show the date
+      return dateStr;
+    }
+
+    // Include time and timezone context for non-midnight times
+    const timeStr = this.contextManager.formatDateInTimezone(date, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    const context = this.contextManager.getContext();
+    return `${dateStr} ${timeStr} ${context.timezone}`;
+  }
+
   formatHuman(date: Date, options: FormatOptions = {}): string {
     const formatOptions: Intl.DateTimeFormatOptions = {
       year: 'numeric',
@@ -168,9 +191,24 @@ export class DateFormatter {
     return `Current date: ${fullDate} (${weekday}, ${year})\nTimezone: ${context.timezone}`;
   }
 
-  formatDateWithOriginal(date: Date, originalText: string): string {
-    const compact = this.formatCompact(date);
-    return `${originalText} (${compact})`;
+  formatDateWithOriginal(date: Date, originalText: string, grain?: 'day' | 'hour' | 'minute' | 'second'): string {
+    // Use grain to determine whether to include time information
+    // Only include time if the original text specified time (hour, minute, or second grain)
+    if (grain && grain !== 'day') {
+      // Force include time and timezone for time-grain expressions
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeStr = this.contextManager.formatDateInTimezone(date, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+      const context = this.contextManager.getContext();
+      return `${originalText} (${dateStr} ${timeStr} ${context.timezone})`;
+    } else {
+      // Use date only for day-grain expressions
+      const compact = this.formatCompact(date);
+      return `${originalText} (${compact})`;
+    }
   }
 
   getTokenCount(text: string): number {

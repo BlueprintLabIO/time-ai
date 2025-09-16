@@ -35,7 +35,45 @@ describe('TimeAI (additional)', () => {
     testCases.forEach(text => {
       const res = ai.enhancePrompt(text, { strategy: 'hybrid' });
       expect(res.enhancedText).not.toBe(text); // Should be enhanced
-      expect(res.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}\)/); // Should contain absolute date
+      expect(res.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}\)$/); // Should contain date only (no time for day-grain)
+    });
+  });
+
+  it('should only include time when original text specified time (grain-based logic)', () => {
+    const ai = new TimeAI({ includeContext: false, timezone: 'America/New_York', locale: 'en-US' });
+
+    // Test cases without time reference (should get day grain)
+    const dayGrainCases = [
+      'Meet tomorrow',
+      'Schedule next Tuesday',
+      'Deadline next Friday',
+      'Call today'
+    ];
+
+    dayGrainCases.forEach(text => {
+      const hybrid = ai.enhancePrompt(text, { strategy: 'hybrid' });
+      const normalized = ai.enhancePrompt(text, { strategy: 'normalize' });
+
+      // Should only have date, no time
+      expect(hybrid.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2}\)$/);
+      expect(normalized.enhancedText).toMatch(/^\w+ \d{4}-\d{2}-\d{2}$/);
+    });
+
+    // Test cases with time reference (should get hour/minute grain)
+    const timeGrainCases = [
+      'Meet tomorrow at 3pm',
+      'Schedule next Tuesday at 9:30am',
+      'Call at noon today'
+      // Note: "Friday morning" is ambiguous - "morning" is general, not a specific time
+    ];
+
+    timeGrainCases.forEach(text => {
+      const hybrid = ai.enhancePrompt(text, { strategy: 'hybrid' });
+      const normalized = ai.enhancePrompt(text, { strategy: 'normalize' });
+
+      // Should include time information
+      expect(hybrid.enhancedText).toMatch(/\(\d{4}-\d{2}-\d{2} \d+:\d+ [AP]M/);
+      expect(normalized.enhancedText).toMatch(/\d{4}-\d{2}-\d{2} \d+:\d+ [AP]M/);
     });
   });
 });

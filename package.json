@@ -1,6 +1,6 @@
 {
   "name": "@blueprintlabio/time-ai",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Time-aware utilities for LLM applications - parse dates, add temporal context, and optimize prompts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,11 @@
     "test:monitor": "node scripts/test-monitor.js once",
     "test:monitor:continuous": "node scripts/test-monitor.js continuous",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "prepublishOnly": "npm run build && npm test",
+    "publish:patch": "npm version patch && npm publish",
+    "publish:minor": "npm version minor && npm publish",
+    "publish:major": "npm version major && npm publish"
   },
   "keywords": [
     "llm",
@@ -31,7 +35,8 @@
   "author": "Blueprint Lab",
   "license": "MIT",
   "dependencies": {
-    "chrono-node": "^2.8.4"
+    "chrono-node": "^2.8.4",
+    "dayjs": "^1.11.18"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
